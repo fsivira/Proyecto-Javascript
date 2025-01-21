@@ -1,53 +1,94 @@
-const Producto = function (nombre, precio, stock) {
-    this.nombre = nombre;
-    this.precio = precio;
-    this.stock = stock;
-};
+const cars = [
+    { modelo: "Toyota Corolla", colores: ["Rojo", "Blanco", "Azul"], precio: 20000000 },
+    { modelo: "Honda Civic", colores: ["Negro", "Gris", "Plata"], precio: 22000000 },
+    { modelo: "Ford Ranger", colores: ["Blanco", "Rojo"], precio: 35000000 },
+    { modelo: "Chevrolet Silverado", colores: ["Azul", "Gris"], precio: 50000000 },
+];
 
-let producto1 = new Producto("barra de chocolate negro", 15000, 20);
-let producto2 = new Producto("barra chocolate de leche", 15000, 20);
-let producto3 = new Producto("bombones macizos", 16000, 30);
-let producto4 = new Producto("bombones rellenos", 16000, 40);
-let producto5 = new Producto("bombones sin azucar", 16500, 25);
-let producto6 = new Producto("barras sin azucar", 16500, 50);
-let producto7 = new Producto("chocolate en polvo", 65000, 15);
+// Variables
+const carContainer = document.getElementById("cars");
+const selectedCarElement = document.getElementById("selectedCar");
+const initialAmountInput = document.getElementById("initialAmount");
+const interestRateInput = document.getElementById("interestRate");
+const monthsInput = document.getElementById("months");
+const calculateButton = document.getElementById("calculateButton");
+const totalPaymentElement = document.getElementById("totalPayment");
+const monthlyPaymentElement = document.getElementById("monthlyPayment");
 
-let lista = [producto1, producto2, producto3, producto4, producto5, producto6, producto7];
+let selectedCar = null;
 
-function agregarProducto() {
-    let nombre = prompt("Ingresa el nombre del producto").trim();
-    let precio = parseFloat(prompt("Ingresa el precio del producto"));
-    let stock = parseInt(prompt("Ingresa el stock del producto"));
+// Mostrar autos en el DOM
+function displayCars() {
+    cars.forEach((car, index) => {
+        const carDiv = document.createElement("div");
+        carDiv.classList.add("car");
+        carDiv.innerHTML = `
+        <h3>${car.modelo}</h3>
+        <p>Colores: ${car.colores.join(", ")}</p>
+        <p>Precio: $${car.precio}</p>
+        <button onclick="selectCar(${index})">Seleccionar</button>`;
+        carContainer.appendChild(carDiv);
+    });
+}
 
-    if (isNaN(precio) || isNaN(stock) || nombre === "" || precio <= 0 || stock <= 0) {
-        alert("Por favor, ingrese valores válidos (nombre no vacío, precio y stock mayores a 0).");
+// Seleccionar un auto
+function selectCar(index) {
+    selectedCar = cars[index];
+    selectedCarElement.textContent = `${selectedCar.modelo} - $${selectedCar.precio}`;
+}
+
+// Calcular el financiamiento
+function calculateFinancing() {
+    if (!selectedCar) {
+        alert("Por favor, selecciona un auto.");
         return;
     }
 
-    let producto = new Producto(nombre, precio, stock);
-    lista.push(producto);
+    const initialAmount = parseFloat(initialAmountInput.value) || 0;
+    const interestRate = parseFloat(interestRateInput.value) || 0;
+    const months = parseInt(monthsInput.value) || 0;
 
-    console.table(lista);
-}
-
-function filtrarProductos() {
-    let palabraClave = prompt("Ingresa el nombre o una palabra clave para buscar productos").trim().toLowerCase();
-
-    if (palabraClave === "") {
-        alert("Por favor, ingresa una palabra clave válida.");
+    if (months <= 0) {
+        alert("El plazo debe ser mayor a 0.");
         return;
     }
 
-    let resultado = lista.filter((producto) =>
-        producto.nombre.toLowerCase().includes(palabraClave)
-    );
+    const loanAmount = selectedCar.precio - initialAmount;
+    const monthlyRate = interestRate / 100 / 12;
+    const totalPayment = loanAmount * (1 + monthlyRate * months);
+    const monthlyPayment = totalPayment / months;
 
-    if (resultado.length > 0) {
-        console.table(resultado);
-    } else {
-        alert("No se encontraron productos que coincidan con la búsqueda.");
+    totalPaymentElement.textContent = totalPayment.toFixed(2);
+    monthlyPaymentElement.textContent = monthlyPayment.toFixed(2);
+
+    saveToLocalStorage(selectedCar, totalPayment, monthlyPayment);
+}
+
+// Guardar datos en localStorage
+function saveToLocalStorage(car, totalPayment, monthlyPayment) {
+    const data = {
+        car,
+        totalPayment,
+        monthlyPayment,
+    };
+    localStorage.setItem("financingData", JSON.stringify(data));
+}
+
+// Cargar datos de localStorage
+function loadFromLocalStorage() {
+    const data = JSON.parse(localStorage.getItem("financingData"));
+    if (data) {
+        selectedCar = data.car;
+        selectedCarElement.textContent = `${selectedCar.modelo} - $${selectedCar.precio}`;
+        totalPaymentElement.textContent = data.totalPayment.toFixed(2);
+        monthlyPaymentElement.textContent = data.monthlyPayment.toFixed(2);
     }
 }
 
-agregarProducto();
-filtrarProductos();
+// Inicializar
+document.addEventListener("DOMContentLoaded", () => {
+    displayCars();
+    loadFromLocalStorage();
+});
+
+calculateButton.addEventListener("click", calculateFinancing);
