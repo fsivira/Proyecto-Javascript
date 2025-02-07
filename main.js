@@ -1,94 +1,84 @@
-const cars = [
-    { modelo: "Toyota Corolla", colores: ["Rojo", "Blanco", "Azul"], precio: 20000000 },
-    { modelo: "Honda Civic", colores: ["Negro", "Gris", "Plata"], precio: 22000000 },
-    { modelo: "Ford Ranger", colores: ["Blanco", "Rojo"], precio: 35000000 },
-    { modelo: "Chevrolet Silverado", colores: ["Azul", "Gris"], precio: 50000000 },
-];
+document.getElementById('buscarBoton').addEventListener('click', () => {
+    const query = document.getElementById('buscarInput').value;
+    if (query) {
+        fetchMovies(query);
+    } else {
+        Swal.fire('Error', 'Por favor ingresa una película para buscar', 'error');
+    }
+});
 
-// Variables
-const carContainer = document.getElementById("cars");
-const selectedCarElement = document.getElementById("selectedCar");
-const initialAmountInput = document.getElementById("initialAmount");
-const interestRateInput = document.getElementById("interestRate");
-const monthsInput = document.getElementById("months");
-const calculateButton = document.getElementById("calculateButton");
-const totalPaymentElement = document.getElementById("totalPayment");
-const monthlyPaymentElement = document.getElementById("monthlyPayment");
+const favorites = [];
 
-let selectedCar = null;
+async function fetchMovies(query) {
+    try {
+        const response = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=1320caedfbb62c1f7c36b7fc86cb6dd5&query=${query}&language=es-ES`);
+        const data = await response.json();
+        if (data.results.length > 0) {
+            displayMovies(data.results);
+        } else {
+            Swal.fire('No encontrado', 'No se encontraron resultados', 'warning');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Hubo un problema con la búsqueda', 'error');
+    }
+}
 
-// Mostrar autos en el DOM
-function displayCars() {
-    cars.forEach((car, index) => {
-        const carDiv = document.createElement("div");
-        carDiv.classList.add("car");
-        carDiv.innerHTML = `
-        <h3>${car.modelo}</h3>
-        <p>Colores: ${car.colores.join(", ")}</p>
-        <p>Precio: $${car.precio}</p>
-        <button onclick="selectCar(${index})">Seleccionar</button>`;
-        carContainer.appendChild(carDiv);
+function displayMovies(movies) {
+    const container = document.getElementById('peliculaContainer');
+    container.innerHTML = '';
+    movies.forEach(movie => {
+        const movieElement = document.createElement('div');
+        movieElement.classList.add('movie-card');
+        movieElement.innerHTML = `
+            <h3>${movie.title} (${movie.release_date.split('-')[0]})</h3>
+            <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}">
+            <button onclick="showDetails(${movie.id})">Detalles</button>
+            <button onclick="addToFavorites(${movie.id}, '${movie.title}', '${movie.poster_path}')">Añadir a Favoritos</button>
+        `;
+        container.appendChild(movieElement);
     });
 }
 
-// Seleccionar un auto
-function selectCar(index) {
-    selectedCar = cars[index];
-    selectedCarElement.textContent = `${selectedCar.modelo} - $${selectedCar.precio}`;
+async function showDetails(movieID) {
+    const response = await fetch(`https://api.themoviedb.org/3/movie/${movieID}?api_key=1320caedfbb62c1f7c36b7fc86cb6dd5&language=es-ES`);
+    const movie = await response.json();
+    Swal.fire({
+        title: movie.title,
+        text: movie.overview,
+        imageUrl: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
+        imageWidth: 200,
+        confirmButtonText: 'Cerrar'
+    });
 }
 
-// Calcular el financiamiento
-function calculateFinancing() {
-    if (!selectedCar) {
-        alert("Por favor, selecciona un auto.");
-        return;
-    }
-
-    const initialAmount = parseFloat(initialAmountInput.value) || 0;
-    const interestRate = parseFloat(interestRateInput.value) || 0;
-    const months = parseInt(monthsInput.value) || 0;
-
-    if (months <= 0) {
-        alert("El plazo debe ser mayor a 0.");
-        return;
-    }
-
-    const loanAmount = selectedCar.precio - initialAmount;
-    const monthlyRate = interestRate / 100 / 12;
-    const totalPayment = loanAmount * (1 + monthlyRate * months);
-    const monthlyPayment = totalPayment / months;
-
-    totalPaymentElement.textContent = totalPayment.toFixed(2);
-    monthlyPaymentElement.textContent = monthlyPayment.toFixed(2);
-
-    saveToLocalStorage(selectedCar, totalPayment, monthlyPayment);
-}
-
-// Guardar datos en localStorage
-function saveToLocalStorage(car, totalPayment, monthlyPayment) {
-    const data = {
-        car,
-        totalPayment,
-        monthlyPayment,
-    };
-    localStorage.setItem("financingData", JSON.stringify(data));
-}
-
-// Cargar datos de localStorage
-function loadFromLocalStorage() {
-    const data = JSON.parse(localStorage.getItem("financingData"));
-    if (data) {
-        selectedCar = data.car;
-        selectedCarElement.textContent = `${selectedCar.modelo} - $${selectedCar.precio}`;
-        totalPaymentElement.textContent = data.totalPayment.toFixed(2);
-        monthlyPaymentElement.textContent = data.monthlyPayment.toFixed(2);
+function addToFavorites(id, title, poster) {
+    if (!favorites.some(movie => movie.id === id)) {
+        favorites.push({ id, title, poster });
+        displayFavorites();
+    } else {
+        Swal.fire('Info', 'Esta película ya está en favoritos', 'info');
     }
 }
 
-// Inicializar
-document.addEventListener("DOMContentLoaded", () => {
-    displayCars();
-    loadFromLocalStorage();
-});
+function displayFavorites() {
+    const container = document.getElementById('favoritesContainer');
+    container.innerHTML = '';
+    favorites.forEach(movie => {
+        const movieElement = document.createElement('div');
+        movieElement.classList.add('movie-card');
+        movieElement.innerHTML = `
+            <h3>${movie.title}</h3>
+            <img src="https://image.tmdb.org/t/p/w500${movie.poster}" alt="${movie.title}">
+            <button onclick="removeFromFavorites(${movie.id})">Eliminar</button>
+        `;
+        container.appendChild(movieElement);
+    });
+}
 
-calculateButton.addEventListener("click", calculateFinancing);
+function removeFromFavorites(id) {
+    const index = favorites.findIndex(movie => movie.id === id);
+    if (index !== -1) {
+        favorites.splice(index, 1);
+        displayFavorites();
+    }
+}

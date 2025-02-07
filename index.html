@@ -1,45 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Buscador de Peliculas</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
     <div class="container">
-        <h1>Calculadora de Financiación para Autos</h1>
-
-        <!-- Lista de autos -->
-        <div id="carList">
-            <h2>Autos Disponibles</h2>
-            <div id="cars"></div>
-        </div>
-
-        <!-- Formulario de cálculo -->
-        <div id="calculator">
-            <h2>Calculadora</h2>
-            <p><strong>Auto Seleccionado:</strong> <span id="selectedCar">Ninguno</span></p>
-            <label>Monto Inicial ($):</label>
-            <input type="number" id="initialAmount" placeholder="Ej: 5000000">
-            <label>Tasa de Interés (% anual):</label>
-            <input type="number" id="interestRate" placeholder="Ej: 5">
-            <label>Plazo (meses):</label>
-            <input type="number" id="months" placeholder="Ej: 24">
-            <button id="calculateButton">Calcular</button>
-        </div>
-
-        <!-- Resultados -->
-        <div id="results">
-            <h2>Resultados</h2>
-            <p><strong>Total a Pagar:</strong> $<span id="totalPayment">0.00</span></p>
-            <p><strong>Mensualidad:</strong> $<span id="monthlyPayment">0.00</span></p>
-        </div>
+        <h1>Buscador de Peliculas</h1>
+        <input type="text" id="buscarInput" placeholder="Busca una película...">
+        <button id="buscarBoton">Buscar</button>
+        <div id="peliculaContainer"></div>
+        <h2>Favoritas</h2>
+        <div id="favoritesContainer"></div>
     </div>
-
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="main.js"></script>
 </body>
-
 </html>
